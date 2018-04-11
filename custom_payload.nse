@@ -1,12 +1,13 @@
 local nmap = require "nmap"
 local table = require "table"
 local luasocket = require "socket"
+local stdnse = require "stdnse"
 
 description = [[
   SEND custom payload adding "_IP_PORT/TCP" info.
 ]]
 
---- nmap <options> --script mypayload.nse --script-args "custom.payload='TEST_PAYLOAD_'"
+--- nmap <options> --script mypayload.nse --script-args "custom.payload='TEST_PAYLOAD_', verbose='true'"
 
 author = "Humbert Costas <@humbertcostas>"
 
@@ -20,7 +21,13 @@ portrule = function(host, port)
 end
 
 action = function(host, port)
-  local my_payload = "TEST_PAYLOAD_" .. host.ip .. "_" .. port.number .."/TCP_madafaka"
+  local my_payload = stdnse.get_script_args("custom-payload")
+  local target_info = stdnse.get_script_args("verbose")
+
+  if target_info then
+    my_payload = my_payload .. host.ip .. "_" .. port.number .. "/" .. port.protocol
+  end
+
   local myclient = nmap.new_socket()
 
   myclient:connect(host.ip, port.number)
